@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>LIBRA — Smart Library</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#0b1d3a;--navy2:#122550;--gold:#c9a84c;--gold2:#e8c96a;--cream:#f5f0e8;--cream2:#ede7d9;--white:#fff;--text:#1a2744;--muted:#6b7a99;--ok:#15803d;--danger:#b91c1c;--warn:#b45309;--shadow:0 8px 40px rgba(11,29,58,.13);--r:14px}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--text);min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 70% 50% at 5% 0%,rgba(201,168,76,.09),transparent 65%),radial-gradient(ellipse 55% 70% at 95% 100%,rgba(11,29,58,.07),transparent 60%);pointer-events:none;z-index:0}
+
+/* NAVBAR */
+.navbar{position:sticky;top:0;z-index:200;background:rgba(11,29,58,.97);backdrop-filter:blur(20px);border-bottom:1px solid rgba(201,168,76,.15);padding:0 44px;height:66px;display:flex;justify-content:space-between;align-items:center}
+.logo{display:flex;align-items:center;gap:11px;cursor:pointer}
+.logo-box{width:36px;height:36px;background:linear-gradient(135deg,var(--gold),var(--gold2));border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:18px}
+.logo-text{font-family:'Cormorant Garamond',serif;font-size:25px;font-weight:700;color:#fff;letter-spacing:3px}
+.nav-links{display:flex;align-items:center;gap:4px}
+.nb{background:transparent;color:rgba(255,255,255,.72);border:none;padding:7px 15px;border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;transition:all .2s;position:relative}
+.nb:hover{color:#fff;background:rgba(255,255,255,.08)}
+.nb.active{color:var(--gold);background:rgba(201,168,76,.12)}
+.nb.login-btn{background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--navy);font-weight:700;padding:7px 18px}
+.nb.login-btn:hover{opacity:.9}
+.notif-dot{position:absolute;top:5px;right:9px;width:7px;height:7px;border-radius:50%;background:#ef4444;border:2px solid var(--navy);display:none}
+.notif-dot.show{display:block}
+
+/* SECTIONS */
+.section{display:none;position:relative;z-index:1}
+.section.active{display:block;animation:fadeUp .38s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+
+/* PAGE HEADER */
+.ph{background:linear-gradient(135deg,var(--navy),var(--navy2));padding:42px 48px 50px;position:relative;overflow:hidden}
+.ph::before{content:'';position:absolute;top:-70px;right:-70px;width:260px;height:260px;background:radial-gradient(circle,rgba(201,168,76,.13),transparent 70%);border-radius:50%}
+.ph h2{font-family:'Cormorant Garamond',serif;font-size:34px;color:#fff;font-weight:600;margin-bottom:5px}
+.ph p{color:rgba(255,255,255,.5);font-size:14px}
+
+/* HERO */
+.hero{min-height:calc(100vh - 66px);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 40px;text-align:center}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(201,168,76,.11);border:1px solid rgba(201,168,76,.28);padding:6px 18px;border-radius:30px;font-size:13px;color:var(--gold);font-weight:500;margin-bottom:26px;letter-spacing:.5px}
+.hero h1{font-family:'Cormorant Garamond',serif;font-size:clamp(44px,7vw,82px);font-weight:600;color:var(--navy);line-height:1.07;margin-bottom:20px;letter-spacing:-1px}
+.hero h1 span{color:var(--gold)}
+.hero p{font-size:17px;color:var(--muted);max-width:510px;line-height:1.75;margin-bottom:40px}
+.hero-ctas{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;margin-bottom:64px}
+
+/* BUTTONS */
+.btn{padding:11px 24px;border-radius:10px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;transition:all .22s}
+.btn-primary{background:linear-gradient(135deg,var(--navy),var(--navy2));color:#fff;box-shadow:0 4px 18px rgba(11,29,58,.22)}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 26px rgba(11,29,58,.28)}
+.btn-primary:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--navy);box-shadow:0 4px 18px rgba(201,168,76,.28)}
+.btn-gold:hover{transform:translateY(-2px)}
+.btn-outline{background:transparent;color:var(--navy);border:2px solid rgba(11,29,58,.16)}
+.btn-outline:hover{border-color:var(--gold);color:var(--gold)}
+.btn-danger{background:#fee2e2;color:#991b1b;border:none}
+.btn-danger:hover{background:#fecaca}
+.btn-sm{padding:7px 15px;font-size:13px}
+.btn-xs{padding:4px 11px;font-size:12px}
+
+/* STATS */
+.stats-bar{display:flex;background:#fff;border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden;border:1px solid rgba(11,29,58,.07)}
+.stat-it{flex:1;padding:20px 26px;text-align:center;border-right:1px solid rgba(11,29,58,.07)}
+.stat-it:last-child{border-right:none}
+.stat-num{font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:700;color:var(--navy);display:block}
+.stat-lbl{font-size:11px;color:var(--muted);font-weight:600;letter-spacing:.5px;margin-top:2px}
+
+/* FEATURES */
+.feat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:16px;padding:52px 48px;max-width:1200px;margin:0 auto}
+.feat-card{background:#fff;border-radius:var(--r);padding:24px;border:1px solid rgba(11,29,58,.07);box-shadow:0 2px 10px rgba(11,29,58,.05);transition:all .25s}
+.feat-card:hover{transform:translateY(-4px);box-shadow:var(--shadow);border-color:rgba(201,168,76,.22)}
+.feat-card h3{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:600;color:var(--navy);margin:10px 0 6px}
+.feat-card p{font-size:13px;color:var(--muted);line-height:1.6}
+
+/* LIBRARY */
+.lib-ctrl{display:flex;gap:12px;padding:22px 48px;background:#fff;border-bottom:1px solid rgba(11,29,58,.07);flex-wrap:wrap;align-items:center}
+.sw{flex:1;min-width:220px;position:relative}
+.sw span{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:15px}
+.si{width:100%;padding:10px 12px 10px 38px;border:1.5px solid rgba(11,29,58,.12);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--cream);color:var(--text);outline:none;transition:border-color .2s}
+.si:focus{border-color:var(--gold);background:#fff}
+.fb{padding:10px 15px;border:1.5px solid rgba(11,29,58,.12);border-radius:10px;background:var(--cream);cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;color:var(--text);transition:all .2s;white-space:nowrap}
+.fb:hover,.fb.active{border-color:var(--gold);background:rgba(201,168,76,.08);color:var(--gold)}
+.book-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(252px,1fr));gap:20px;padding:30px 48px;max-width:1400px}
+.book-card{background:#fff;border-radius:var(--r);overflow:hidden;border:1px solid rgba(11,29,58,.07);box-shadow:0 2px 10px rgba(11,29,58,.05);cursor:pointer;transition:all .28s;position:relative}
+.book-card:hover{transform:translateY(-5px);box-shadow:var(--shadow);border-color:rgba(201,168,76,.28)}
+.bc-cover{height:116px;display:flex;align-items:center;justify-content:center;font-size:40px}
+.bc-body{padding:15px 17px 17px}
+.bc-genre{font-size:10px;color:var(--gold);background:rgba(201,168,76,.1);padding:3px 10px;border-radius:20px;display:inline-block;margin-bottom:6px;font-weight:700;letter-spacing:.3px}
+.bc-title{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:600;color:var(--navy);margin-bottom:3px;line-height:1.2}
+.bc-author{font-size:12px;color:var(--muted);margin-bottom:11px}
+.bc-meta{display:flex;justify-content:space-between;align-items:center}
+.badge{font-size:11px;font-weight:600;padding:4px 11px;border-radius:20px}
+.badge-ok{background:#d1fae5;color:#065f46}
+.badge-no{background:#fee2e2;color:#991b1b}
+.badge-warn{background:#fef3c7;color:#92400e}
+.badge-info{background:#dbeafe;color:#1e40af}
+.bc-star{color:var(--gold);font-size:11px}
+.wish-btn{position:absolute;top:9px;right:9px;width:29px;height:29px;background:rgba(255,255,255,.92);border:none;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;box-shadow:0 2px 8px rgba(0,0,0,.1);transition:all .2s;z-index:2}
+.wish-btn:hover{transform:scale(1.12)}
+
+/* DETAILS */
+.det-wrap{max-width:820px;margin:0 auto;padding:42px 48px}
+.det-card{background:#fff;border-radius:18px;overflow:hidden;box-shadow:var(--shadow);border:1px solid rgba(11,29,58,.07)}
+.det-head{padding:34px;display:flex;gap:24px;align-items:flex-start}
+.det-icon{width:90px;height:120px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:46px;flex-shrink:0}
+.di h2{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:700;color:var(--navy);margin-bottom:5px}
+.di .auth-lbl{color:var(--muted);margin-bottom:10px;font-size:14px}
+.di .rat{color:var(--gold);font-size:17px}
+.det-body{padding:0 34px 34px}
+.det-body h4{font-family:'Cormorant Garamond',serif;font-size:16px;color:var(--navy);margin-bottom:8px;margin-top:20px}
+.det-body p{color:var(--muted);line-height:1.8;font-size:14px}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.info-it{background:var(--cream);border-radius:10px;padding:12px 15px}
+.info-it .lbl{font-size:10px;color:var(--muted);font-weight:700;letter-spacing:.6px;text-transform:uppercase;margin-bottom:3px}
+.info-it .val{font-size:14.5px;font-weight:600;color:var(--navy)}
+.det-acts{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}
+
+/* BORROW */
+.bor-wrap{max-width:660px;margin:0 auto;padding:42px 48px}
+.form-card{background:#fff;border-radius:18px;padding:32px;box-shadow:var(--shadow);border:1px solid rgba(11,29,58,.07);margin-bottom:22px}
+.form-card h3{font-family:'Cormorant Garamond',serif;font-size:23px;color:var(--navy);margin-bottom:18px}
+.fg{margin-bottom:15px}
+.fg label{display:block;font-size:12px;font-weight:600;color:var(--text);margin-bottom:6px;letter-spacing:.2px}
+.fi{width:100%;padding:11px 15px;border:1.5px solid rgba(11,29,58,.12);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--text);background:var(--cream);outline:none;transition:all .2s}
+.fi:focus{border-color:var(--gold);background:#fff;box-shadow:0 0 0 3px rgba(201,168,76,.09)}
+.bor-item{display:flex;align-items:center;gap:10px;background:var(--cream);padding:10px 14px;border-radius:10px;border:1px solid rgba(11,29,58,.07);margin-bottom:9px}
+.bor-num{width:26px;height:26px;background:var(--navy);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
+.bor-sum{background:rgba(201,168,76,.08);border:1px solid rgba(201,168,76,.22);border-radius:12px;padding:15px 19px;margin-top:16px;font-size:13px;color:var(--text);display:flex;gap:18px;flex-wrap:wrap}
+.bor-sum strong{color:var(--navy)}
+.how-card{background:#fff;border-radius:18px;padding:32px;box-shadow:var(--shadow);border:1px solid rgba(11,29,58,.07);border-left:4px solid var(--gold)}
+.how-card h3{font-family:'Cormorant Garamond',serif;font-size:23px;color:var(--navy);margin-bottom:16px}
+.how-step{display:flex;gap:14px;align-items:center;margin-bottom:14px}
+.how-dot{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.how-step h4{font-size:14px;font-weight:600;color:var(--navy);margin-bottom:2px}
+.how-step p{font-size:12.5px;color:var(--muted)}
+
+/* REMINDERS */
+.rem-wrap{padding:42px 48px;max-width:980px}
+.rem-timeline{display:flex;flex-direction:column;gap:0}
+.rem-item{display:flex;gap:18px;position:relative;padding-bottom:26px}
+.rem-item::before{content:'';position:absolute;left:18px;top:40px;width:2px;bottom:0;background:rgba(11,29,58,.09)}
+.rem-item:last-child::before{display:none}
+.rem-dot{width:38px;height:38px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:17px;border:3px solid #fff;box-shadow:0 2px 8px rgba(11,29,58,.14);position:relative;z-index:1}
+.rd-g{background:#d1fae5}.rd-y{background:#fef3c7}.rd-o{background:#ffedd5}.rd-r{background:#fee2e2}
+.rem-card{flex:1;background:#fff;border-radius:var(--r);padding:18px 22px;border:1px solid rgba(11,29,58,.07);box-shadow:0 2px 10px rgba(11,29,58,.05)}
+.rc-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:7px;flex-wrap:wrap;gap:8px}
+.rc-title{font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:600;color:var(--navy)}
+.rc-book{font-size:13px;color:var(--muted);margin-bottom:10px}
+.rc-meta{display:flex;gap:12px;flex-wrap:wrap}
+.rc-tag{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--muted);background:var(--cream);padding:4px 11px;border-radius:20px}
+.rc-acts{display:flex;gap:9px;margin-top:12px;flex-wrap:wrap}
+.rc-msg{font-size:13px;color:var(--muted);margin-top:10px;padding:9px 13px;border-radius:8px}
+
+/* DASHBOARD */
+.dash-wrap{padding:42px 48px;max-width:1200px}
+.dash-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;margin-bottom:28px}
+.dash-card{background:#fff;border-radius:var(--r);padding:20px;border:1px solid rgba(11,29,58,.07);box-shadow:0 2px 10px rgba(11,29,58,.05)}
+.dash-icon{font-size:24px;margin-bottom:11px}
+.dash-num{font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:700;color:var(--navy)}
+.dash-lbl{font-size:12px;color:var(--muted);margin-top:3px}
+.dash-card.danger .dash-num{color:var(--danger)}
+.dt-wrap{background:#fff;border-radius:var(--r);overflow:hidden;border:1px solid rgba(11,29,58,.07);box-shadow:0 2px 10px rgba(11,29,58,.05)}
+.dt-head{padding:16px 22px;border-bottom:1px solid rgba(11,29,58,.07);display:flex;justify-content:space-between;align-items:center}
+.dt-head h3{font-family:'Cormorant Garamond',serif;font-size:18px;color:var(--navy)}
+table{width:100%;border-collapse:collapse}
+th{padding:10px 20px;text-align:left;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;background:var(--cream)}
+td{padding:12px 20px;font-size:13px;border-top:1px solid rgba(11,29,58,.05)}
+tr:hover td{background:rgba(201,168,76,.03)}
+.ov-row td{background:rgba(254,226,226,.35)!important}
+
+/* NOTIFICATIONS */
+.not-wrap{padding:42px 48px;max-width:800px}
+.not-list{display:flex;flex-direction:column;gap:11px}
+.not-card{background:#fff;border-radius:12px;padding:16px 20px;border:1px solid rgba(11,29,58,.07);border-left:4px solid var(--gold);display:flex;gap:13px;align-items:flex-start}
+.not-card.unread{background:#fffdf5}
+.not-card.te{border-color:var(--danger)}.not-card.ts{border-color:var(--ok)}.not-card.tw{border-color:var(--warn)}
+.not-icon{font-size:20px;flex-shrink:0;margin-top:2px}
+.not-card h4{font-size:14px;font-weight:600;color:var(--navy);margin-bottom:3px}
+.not-card p{font-size:12.5px;color:var(--muted);line-height:1.5}
+.not-time{font-size:11px;color:var(--muted);margin-top:4px}
+
+/* WISHLIST */
+.wish-wrap{padding:42px 48px;max-width:1200px}
+.wish-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(252px,1fr));gap:20px}
+.empty-state{text-align:center;padding:65px 40px;color:var(--muted)}
+.es-emoji{font-size:52px;margin-bottom:13px}
+.empty-state p{font-size:15px;margin-bottom:17px}
+
+/* AUTH MODAL */
+.overlay{display:none;position:fixed;inset:0;background:rgba(11,29,58,.65);backdrop-filter:blur(7px);z-index:500;align-items:center;justify-content:center}
+.overlay.open{display:flex}
+.modal{background:#fff;border-radius:20px;width:395px;max-width:95vw;overflow:hidden;box-shadow:0 20px 80px rgba(11,29,58,.3);animation:popIn .3s cubic-bezier(.34,1.56,.64,1)}
+@keyframes popIn{from{opacity:0;transform:scale(.9) translateY(18px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.m-head{background:linear-gradient(135deg,var(--navy),var(--navy2));padding:24px 28px;position:relative}
+.m-head h3{font-family:'Cormorant Garamond',serif;font-size:24px;color:#fff;font-weight:600}
+.m-head p{font-size:13px;color:rgba(255,255,255,.5);margin-top:3px}
+.m-head::after{content:'📚';position:absolute;right:24px;top:50%;transform:translateY(-50%);font-size:32px;opacity:.35}
+.m-close{position:absolute;top:13px;right:13px;background:rgba(255,255,255,.15);border:none;color:#fff;width:27px;height:27px;border-radius:50%;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center}
+.m-body{padding:24px 28px}
+.tab-sw{display:flex;background:var(--cream);border-radius:10px;padding:4px;margin-bottom:18px}
+.tab-btn{flex:1;padding:8px;border:none;background:transparent;border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;color:var(--muted);transition:all .2s}
+.tab-btn.active{background:#fff;color:var(--navy);font-weight:700;box-shadow:0 2px 8px rgba(11,29,58,.1)}
+.otp-row{display:flex;gap:8px}
+.otp-row .fi{flex:1}
+.otp-send{padding:11px 13px;background:var(--navy);color:#fff;border:none;border-radius:10px;cursor:pointer;font-size:13px;font-weight:600;white-space:nowrap;transition:opacity .2s}
+.otp-send:hover{opacity:.85}
+.user-chip{display:flex;align-items:center;gap:9px;background:rgba(201,168,76,.1);border:1px solid rgba(201,168,76,.22);padding:5px 13px 5px 7px;border-radius:30px;cursor:pointer}
+.u-avatar{width:28px;height:28px;background:linear-gradient(135deg,var(--gold),var(--gold2));border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--navy)}
+.u-name{font-size:13px;font-weight:600;color:#fff}
+
+/* OVERDUE BANNER */
+.ov-banner{background:linear-gradient(135deg,#7f1d1d,#991b1b);color:#fff;padding:11px 44px;display:flex;align-items:center;gap:12px;font-size:13.5px;font-weight:500;animation:fadeUp .5s ease}
+.ov-banner button{margin-left:auto;background:rgba(255,255,255,.15);border:none;color:#fff;padding:4px 12px;border-radius:6px;cursor:pointer;font-size:12px}
+
+/* TOAST */
+.toast-area{position:fixed;bottom:24px;right:24px;z-index:999;display:flex;flex-direction:column;gap:8px}
+.toast{background:#fff;border-left:4px solid var(--gold);padding:12px 16px;border-radius:10px;font-size:13.5px;font-weight:500;box-shadow:0 8px 28px rgba(11,29,58,.14);animation:slideIn .3s ease,fadeOut .3s ease 2.8s forwards;max-width:285px}
+.toast.error{border-color:var(--danger)}.toast.success{border-color:var(--ok)}.toast.warning{border-color:var(--warn)}
+@keyframes slideIn{from{transform:translateX(70px);opacity:0}to{transform:translateX(0);opacity:1}}
+@keyframes fadeOut{to{opacity:0;transform:translateY(8px)}}
+
+/* MISC */
+.loading{text-align:center;padding:56px;color:var(--muted);font-size:15px}
+.spin{display:inline-block;width:28px;height:28px;border:3px solid rgba(11,29,58,.15);border-top-color:var(--navy);border-radius:50%;animation:spin .7s linear infinite;margin-bottom:10px}
+@keyframes spin{to{transform:rotate(360deg)}}
+::-webkit-scrollbar{width:7px}::-webkit-scrollbar-track{background:var(--cream)}::-webkit-scrollbar-thumb{background:rgba(11,29,58,.16);border-radius:4px}
+@media(max-width:768px){.navbar,.ph,.lib-ctrl,.book-grid,.bor-wrap,.dash-wrap,.wish-wrap,.rem-wrap,.not-wrap,.det-wrap{padding-left:16px;padding-right:16px}.stats-bar{flex-direction:column}.stat-it{border-right:none;border-bottom:1px solid rgba(11,29,58,.07)}.det-head{flex-direction:column}.feat-grid{padding:40px 16px}}
+</style>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="logo" onclick="nav('home')">
+    <div class="logo-box">📚</div>
+    <span class="logo-text">LIBRA</span>
+  </div>
+  <div class="nav-links">
+    <button class="nb active" id="nav-home"      onclick="nav('home')">Home</button>
+    <button class="nb" id="nav-library"   onclick="nav('library')">Library</button>
+    <button class="nb" id="nav-borrow"    onclick="nav('borrow')">Borrow</button>
+    <button class="nb" id="nav-reminders" onclick="nav('reminders')">⏰ Reminders</button>
+    <button class="nb" id="nav-wishlist"  onclick="nav('wishlist')">❤️ Wishlist</button>
+    <button class="nb" id="nav-notifs"    onclick="nav('notifs')">🔔 Alerts<span class="notif-dot" id="notifDot"></span></button>
+    <button class="nb" id="nav-dashboard" onclick="nav('dashboard')">Dashboard</button>
+    <div id="authArea"><button class="nb login-btn" onclick="openModal()">Login / Sign Up</button></div>
+  </div>
+</nav>
+
+<div id="ovBanner" style="display:none" class="ov-banner">
+  🚨 <span id="ovText"></span>
+  <button onclick="document.getElementById('ovBanner').style.display='none'">Dismiss</button>
+</div>
+
+<div class="toast-area" id="toastArea"></div>
+
+<!-- HOME -->
+<div id="home" class="section active">
+  <div class="hero">
+    <div class="hero-badge">✨ Smart Library Management System</div>
+    <h1>Your Gateway to<br><span>Knowledge & Books</span></h1>
+    <p>Discover, borrow, and manage books with automated reminders. Never pay a late fine again!</p>
+    <div class="hero-ctas">
+      <button class="btn btn-primary" onclick="nav('library')">Browse Library →</button>
+      <button class="btn btn-gold"    onclick="openModal()">Get Started Free</button>
+    </div>
+    <div class="stats-bar">
+      <div class="stat-it"><span class="stat-num" id="sBooks">—</span><div class="stat-lbl">TOTAL BOOKS</div></div>
+      <div class="stat-it"><span class="stat-num" id="sAvail">—</span><div class="stat-lbl">AVAILABLE</div></div>
+      <div class="stat-it"><span class="stat-num">12</span><div class="stat-lbl">GENRES</div></div>
+      <div class="stat-it"><span class="stat-num">247</span><div class="stat-lbl">MEMBERS</div></div>
+    </div>
+  </div>
+  <div class="feat-grid">
+    <div class="feat-card"><div style="font-size:24px">🔍</div><h3>Smart Search</h3><p>Search by title, author, or genre. Filter by availability in real-time.</p></div>
+    <div class="feat-card"><div style="font-size:24px">⏰</div><h3>Auto Reminders</h3><p>Alerts 3 days before, 1 day before, and on overdue. Never miss a return.</p></div>
+    <div class="feat-card"><div style="font-size:24px">📊</div><h3>Dashboard</h3><p>Track borrows, history, fines, and wishlist all in one place.</p></div>
+    <div class="feat-card"><div style="font-size:24px">💸</div><h3>Zero Fine Guarantee</h3><p>Smart reminders help you return books on time. Avoid ₹5/day late fines.</p></div>
+    <div class="feat-card"><div style="font-size:24px">❤️</div><h3>Wishlist</h3><p>Save books you want. Know when they become available.</p></div>
+    <div class="feat-card"><div style="font-size:24px">🔐</div><h3>Secure Auth</h3><p>Roll-number login with OTP email verification.</p></div>
+  </div>
+</div>
+
+<!-- LIBRARY -->
+<div id="library" class="section">
+  <div class="ph"><h2>Library Catalog</h2><p id="libCount">Loading books…</p></div>
+  <div class="lib-ctrl">
+    <div class="sw"><span>🔍</span><input class="si" id="searchBar" placeholder="Search by title, author, genre…" oninput="filterBooks()"></div>
+    <button class="fb active" onclick="setFilter('all',this)">All</button>
+    <button class="fb" onclick="setFilter('available',this)">Available</button>
+    <button class="fb" onclick="setFilter('unavailable',this)">Borrowed</button>
+    <button class="fb" onclick="setFilter('Technology',this)">Technology</button>
+    <button class="fb" onclick="setFilter('Fiction',this)">Fiction</button>
+    <button class="fb" onclick="setFilter('Science',this)">Science</button>
+  </div>
+  <div id="bookGrid" class="book-grid"><div class="loading"><div class="spin"></div><br>Loading…</div></div>
+</div>
+
+<!-- DETAILS -->
+<div id="details" class="section">
+  <div class="det-wrap">
+    <button class="btn btn-outline btn-sm" onclick="nav('library')" style="margin-bottom:20px">← Back</button>
+    <div class="det-card">
+      <div class="det-head">
+        <div class="det-icon" id="dIcon"></div>
+        <div class="di">
+          <h2 id="dTitle"></h2>
+          <div class="auth-lbl">✍️ <span id="dAuthor"></span></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">
+            <span class="badge badge-info" id="dGenre"></span>
+            <span class="badge" id="dStatus"></span>
+          </div>
+          <div class="rat" id="dRat"></div>
+        </div>
+      </div>
+      <div class="det-body">
+        <h4>About this Book</h4><p id="dDesc"></p>
+        <div class="info-grid">
+          <div class="info-it"><div class="lbl">ISBN</div><div class="val" id="dIsbn"></div></div>
+          <div class="info-it"><div class="lbl">Pages</div><div class="val" id="dPages"></div></div>
+          <div class="info-it"><div class="lbl">Year</div><div class="val" id="dYear"></div></div>
+          <div class="info-it"><div class="lbl">Copies</div><div class="val" id="dCopies"></div></div>
+        </div>
+        <div class="det-acts">
+          <button class="btn btn-primary" id="dBorrowBtn" onclick="borrowBook()">📚 Borrow this Book</button>
+          <button class="btn btn-outline"  id="dWishBtn"  onclick="wishFromDetail()">❤️ Add to Wishlist</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- BORROW -->
+<div id="borrow" class="section">
+  <div class="ph"><h2>Borrow Books</h2><p>Request up to 3 books. Return within 14 days.</p></div>
+  <div class="bor-wrap">
+    <div class="form-card">
+      <h3>New Borrow Request</h3>
+      <div class="fg"><label>Number of books (max 3)</label><input class="fi" type="number" id="borCount" min="1" max="3" placeholder="e.g. 2" oninput="initBorrow()"></div>
+      <div id="borArea"></div>
+      <div class="bor-sum" id="borSum" style="display:none">
+        <div>📅 <strong>Borrow:</strong> <span id="borDate"></span></div>
+        <div>📆 <strong>Due:</strong> <span id="borDue"></span></div>
+        <div>📚 <strong>Books:</strong> <span id="borCnt"></span></div>
+        <div>⚠️ <strong>Fine:</strong> ₹5/day if late</div>
+      </div>
+      <button class="btn btn-primary" style="width:100%;margin-top:16px" onclick="submitBorrow()">Submit Borrow Request</button>
+    </div>
+    <div class="how-card">
+      <h3>How Reminders Work ⏰</h3>
+      <div class="how-step"><div class="how-dot" style="background:#d1fae5">✅</div><div><h4>Borrow Confirmation</h4><p>Instant in-app & email notification when you borrow a book.</p></div></div>
+      <div class="how-step"><div class="how-dot" style="background:#fef3c7">📅</div><div><h4>3-Day Reminder</h4><p>Email + app alert sent 3 days before your due date.</p></div></div>
+      <div class="how-step"><div class="how-dot" style="background:#ffedd5">⚠️</div><div><h4>1-Day Urgent Reminder</h4><p>Urgent email sent the day before your book is due.</p></div></div>
+      <div class="how-step"><div class="how-dot" style="background:#fee2e2">🚨</div><div><h4>Overdue Alert (Daily)</h4><p>Daily alerts with accrued fine. ₹5/day after due date.</p></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- REMINDERS -->
+<div id="reminders" class="section">
+  <div class="ph"><h2>⏰ My Reminders</h2><p>Track upcoming and overdue return dates</p></div>
+  <div class="rem-wrap"><div id="remContent"><div class="loading"><div class="spin"></div><br>Loading…</div></div></div>
+</div>
+
+<!-- WISHLIST -->
+<div id="wishlist" class="section">
+  <div class="ph"><h2>My Wishlist</h2><p>Books you've saved for later</p></div>
+  <div class="wish-wrap">
+    <div id="wishGrid" class="wish-grid"></div>
+    <div id="emptyWish" class="empty-state" style="display:none"><div class="es-emoji">❤️</div><p>Your wishlist is empty.</p><button class="btn btn-primary" onclick="nav('library')">Browse Library</button></div>
+  </div>
+</div>
+
+<!-- NOTIFICATIONS -->
+<div id="notifs" class="section">
+  <div class="ph"><h2>🔔 Notifications</h2><p>Your alerts and reminders</p></div>
+  <div class="not-wrap">
+    <div style="display:flex;justify-content:flex-end;margin-bottom:14px">
+      <button class="btn btn-outline btn-sm" onclick="markAllRead()">Mark all read</button>
+    </div>
+    <div id="notifList" class="not-list"><div class="loading"><div class="spin"></div><br>Loading…</div></div>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboard" class="section">
+  <div class="ph"><h2>My Dashboard</h2><p>Reading activity & stats</p></div>
+  <div class="dash-wrap">
+    <div class="dash-grid">
+      <div class="dash-card"><div class="dash-icon">📚</div><div class="dash-num" id="dActive">—</div><div class="dash-lbl">Active Borrows</div></div>
+      <div class="dash-card"><div class="dash-icon">✅</div><div class="dash-num" id="dRet">—</div><div class="dash-lbl">Returned</div></div>
+      <div class="dash-card danger"><div class="dash-icon">🚨</div><div class="dash-num" id="dOv">—</div><div class="dash-lbl">Overdue</div></div>
+      <div class="dash-card"><div class="dash-icon">❤️</div><div class="dash-num" id="dWish">—</div><div class="dash-lbl">Wishlist</div></div>
+      <div class="dash-card danger"><div class="dash-icon">💸</div><div class="dash-num" id="dFine">—</div><div class="dash-lbl">Total Fines</div></div>
+    </div>
+    <div class="dt-wrap">
+      <div class="dt-head"><h3>Borrow History</h3><button class="btn btn-outline btn-sm" onclick="loadHistory()">↻ Refresh</button></div>
+      <table><thead><tr><th>Book</th><th>Borrowed</th><th>Due Date</th><th>Status</th><th>Fine</th><th>Action</th></tr></thead>
+      <tbody id="histTbl"></tbody></table>
+    </div>
+  </div>
+</div>
+
+<!-- AUTH MODAL -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="m-head">
+      <h3 id="mTitle">Welcome to LIBRA</h3>
+      <p id="mSub">Sign in to continue</p>
+      <button class="m-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="m-body">
+      <div class="tab-sw">
+        <button class="tab-btn active" id="tabL" onclick="setMode('login')">Login</button>
+        <button class="tab-btn"        id="tabS" onclick="setMode('signup')">Sign Up</button>
+      </div>
+      <div class="fg" id="nameGrp" style="display:none"><label>Full Name</label><input class="fi" id="iName" placeholder="Your full name"></div>
+      <div class="fg"><label>Roll Number</label><input class="fi" id="iRoll" placeholder="e.g. 22CS101"></div>
+      <div class="fg"><label>Email</label><input class="fi" id="iMail" type="email" placeholder="you@example.com"></div>
+      <div class="fg"><label>Password</label><input class="fi" id="iPass" type="password" placeholder="••••••••"></div>
+      <div class="fg" id="otpGrp" style="display:none">
+        <label>OTP Verification</label>
+        <div class="otp-row">
+          <input class="fi" id="iOtp" placeholder="Enter OTP">
+          <button class="otp-send" onclick="sendOTP()">Send OTP</button>
+        </div>
+        <p style="font-size:12px;color:var(--muted);margin-top:5px">OTP will be sent to your email (backend) or shown in alert (offline)</p>
+      </div>
+      <button class="btn btn-primary" style="width:100%;margin-top:8px" onclick="validate()">Continue →</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ══ CONFIG ═══════════════════════════════════════════════════ */
+const API = 'http://localhost:3000/api';
+
+const BOOKS_OFFLINE = [
+  {id:1,title:"Data Structures & Algorithms",author:"Alfred Aho",genre:"Technology",isbn:"978-0321455369",description:"A comprehensive guide covering arrays, trees, graphs, and dynamic programming with real-world applications.",pages:672,year:2006,total_copies:4,available_copies:3,emoji:"💻",color:"#e8f4fd"},
+  {id:2,title:"Python Crash Course",author:"Eric Matthes",genre:"Technology",isbn:"978-1593279288",description:"Hands-on, project-based introduction to Python programming with three real projects.",pages:554,year:2019,total_copies:3,available_copies:2,emoji:"🐍",color:"#fef3c7"},
+  {id:3,title:"Java: The Complete Reference",author:"Herbert Schildt",genre:"Technology",isbn:"978-1260463422",description:"The definitive guide to Java SE covering modules, generics, functional programming, and the full Java API.",pages:1246,year:2021,total_copies:2,available_copies:0,emoji:"☕",color:"#fff1f2"},
+  {id:4,title:"The Great Gatsby",author:"F. Scott Fitzgerald",genre:"Fiction",isbn:"978-0743273565",description:"A masterpiece of the Jazz Age exploring wealth, class, love, and the American Dream in 1920s New York.",pages:180,year:1925,total_copies:4,available_copies:4,emoji:"📖",color:"#f0fdf4"},
+  {id:5,title:"A Brief History of Time",author:"Stephen Hawking",genre:"Science",isbn:"978-0553380163",description:"Explores the nature of time, black holes, the Big Bang, and the possibilities of a unified theory.",pages:212,year:1988,total_copies:3,available_copies:2,emoji:"🌌",color:"#f5f3ff"},
+  {id:6,title:"Atomic Habits",author:"James Clear",genre:"Self-Help",isbn:"978-0735211292",description:"An easy and proven way to build good habits and break bad ones. Tiny changes, remarkable results.",pages:320,year:2018,total_copies:2,available_copies:0,emoji:"⚡",color:"#fff7ed"},
+  {id:7,title:"Clean Code",author:"Robert C. Martin",genre:"Technology",isbn:"978-0132350884",description:"A handbook of agile software craftsmanship. Learn how to write clean, maintainable code with real examples.",pages:431,year:2008,total_copies:2,available_copies:1,emoji:"🧹",color:"#f0fdf4"},
+  {id:8,title:"Sapiens",author:"Yuval Noah Harari",genre:"History",isbn:"978-0062316097",description:"A brief history of humankind from the emergence of Homo sapiens in Africa to the present day.",pages:443,year:2011,total_copies:3,available_copies:3,emoji:"🏺",color:"#fffbeb"},
+  {id:9,title:"Dune",author:"Frank Herbert",genre:"Fiction",isbn:"978-0441013593",description:"Epic science fiction set in the distant future on the desert planet Arrakis — a story of power and survival.",pages:688,year:1965,total_copies:1,available_copies:0,emoji:"🏜️",color:"#fefce8"},
+  {id:10,title:"Intro to Machine Learning",author:"Ethem Alpaydin",genre:"Technology",isbn:"978-0262043793",description:"Covers supervised/unsupervised learning, neural networks, and kernel machines from fundamentals.",pages:640,year:2020,total_copies:3,available_copies:2,emoji:"🤖",color:"#eff6ff"},
+  {id:11,title:"The Alchemist",author:"Paulo Coelho",genre:"Fiction",isbn:"978-0062315007",description:"A magical tale about following your dream. Santiago's journey across the world to find his treasure.",pages:197,year:1988,total_copies:5,available_copies:5,emoji:"✨",color:"#fdf4ff"},
+  {id:12,title:"Operating System Concepts",author:"Silberschatz & Galvin",genre:"Technology",isbn:"978-1119320913",description:"The 'Dinosaur Book' — covers memory management, process scheduling, and I/O systems in depth.",pages:944,year:2018,total_copies:2,available_copies:0,emoji:"🦕",color:"#f0fdfa"},
+];
+
+/* ══ STATE ════════════════════════════════════════════════════ */
+let currentUser = JSON.parse(localStorage.getItem('libra_user') || 'null');
+let token       = localStorage.getItem('libra_token') || '';
+let allBooks    = [];
+let myBorrows   = [];
+let myWishlist  = [];
+let myNotifs    = [];
+let activeFilt  = 'all';
+let detailId    = null;
+let isSignup    = false;
+let online      = false;
+
+/* ══ API ══════════════════════════════════════════════════════ */
+async function api(path, opts = {}) {
+  const h = { 'Content-Type': 'application/json' };
+  if (token) h['Authorization'] = 'Bearer ' + token;
+  const r = await fetch(API + path, { ...opts, headers: { ...h, ...(opts.headers || {}) } });
+  const d = await r.json();
+  if (!r.ok) throw new Error(d.error || 'Request failed');
+  return d;
+}
+
+/* ══ NAV ══════════════════════════════════════════════════════ */
+function nav(id) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('.nb[id^=nav-]').forEach(b => b.classList.remove('active'));
+  const nb = document.getElementById('nav-' + id);
+  if (nb) nb.classList.add('active');
+  if (id === 'library')   loadBooks();
+  if (id === 'reminders') loadReminders();
+  if (id === 'wishlist')  loadWishlist();
+  if (id === 'dashboard') loadDashboard();
+  if (id === 'notifs')    loadNotifs();
+}
+
+/* ══ BOOKS ════════════════════════════════════════════════════ */
+function stars(n){ return '★'.repeat(n)+'☆'.repeat(5-n); }
+
+async function loadBooks() {
+  try { allBooks = await api('/books'); online = true; }
+  catch { allBooks = BOOKS_OFFLINE; online = false; }
+  document.getElementById('sBooks').textContent = allBooks.length;
+  document.getElementById('sAvail').textContent = allBooks.filter(b=>b.available_copies>0).length;
+  renderBooks(allBooks);
+}
+
+function renderBooks(list) {
+  const g = document.getElementById('bookGrid');
+  document.getElementById('libCount').textContent = `${list.length} book${list.length!==1?'s':''} found`;
+  if (!list.length) { g.innerHTML = '<div class="loading">No books found.</div>'; return; }
+  g.innerHTML = list.map(b => bookCard(b)).join('');
+}
+
+function bookCard(b) {
+  const avail = b.available_copies > 0;
+  const wished = myWishlist.some(w => w.id === b.id);
+  return `<div class="book-card" onclick="openDetail(${b.id})">
+    <button class="wish-btn" onclick="event.stopPropagation();toggleWish(${b.id},this)">${wished?'❤️':'🤍'}</button>
+    <div class="bc-cover" style="background:${b.color}">${b.emoji}</div>
+    <div class="bc-body">
+      <div class="bc-genre">${b.genre}</div>
+      <div class="bc-title">${b.title}</div>
+      <div class="bc-author">${b.author}</div>
+      <div class="bc-meta">
+        <span class="badge ${avail?'badge-ok':'badge-no'}">${avail?'✓ Available':'✗ Borrowed'}</span>
+        <span class="bc-star">${stars(4)}</span>
+      </div>
+    </div>
+  </div>`;
+}
+
+function filterBooks() {
+  const q = document.getElementById('searchBar').value.toLowerCase();
+  let list = allBooks.filter(b => b.title.toLowerCase().includes(q)||b.author.toLowerCase().includes(q)||b.genre.toLowerCase().includes(q));
+  if (activeFilt==='available')   list = list.filter(b=>b.available_copies>0);
+  else if (activeFilt==='unavailable') list = list.filter(b=>b.available_copies===0);
+  else if (activeFilt!=='all')    list = list.filter(b=>b.genre===activeFilt);
+  renderBooks(list);
+}
+function setFilter(f, el) {
+  activeFilt = f;
+  document.querySelectorAll('.fb').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  filterBooks();
+}
+
+function openDetail(id) {
+  const b = allBooks.find(x=>x.id===id);
+  if (!b) return;
+  detailId = id;
+  const avail = b.available_copies > 0;
+  document.getElementById('dIcon').innerHTML=`<span style="font-size:50px">${b.emoji}</span>`;
+  document.getElementById('dIcon').style.background=b.color;
+  document.getElementById('dTitle').textContent=b.title;
+  document.getElementById('dAuthor').textContent=b.author;
+  document.getElementById('dGenre').textContent=b.genre;
+  document.getElementById('dRat').textContent=stars(4)+' (4/5)';
+  document.getElementById('dDesc').textContent=b.description;
+  document.getElementById('dIsbn').textContent=b.isbn;
+  document.getElementById('dPages').textContent=b.pages+' pages';
+  document.getElementById('dYear').textContent=b.year;
+  document.getElementById('dCopies').textContent=b.available_copies+' / '+b.total_copies;
+  const st = document.getElementById('dStatus');
+  st.textContent = avail?'✓ Available':'✗ Borrowed';
+  st.className   = 'badge '+(avail?'badge-ok':'badge-no');
+  const bb = document.getElementById('dBorrowBtn');
+  bb.disabled = !avail;
+  const wished = myWishlist.some(w=>w.id===id);
+  document.getElementById('dWishBtn').textContent = wished?'💔 Remove Wishlist':'❤️ Add to Wishlist';
+  nav('details');
+}
+
+/* ══ BORROW ═══════════════════════════════════════════════════ */
+function initBorrow() {
+  const n   = Math.min(parseInt(document.getElementById('borCount').value)||0,3);
+  const a   = document.getElementById('borArea');
+  const sum = document.getElementById('borSum');
+  if (!n) { a.innerHTML=''; sum.style.display='none'; return; }
+  a.innerHTML = Array.from({length:n},(_,i)=>`
+    <div class="bor-item">
+      <div class="bor-num">${i+1}</div>
+      <input class="fi" id="bk_${i}" placeholder="Book ${i+1} title or ISBN…" style="margin:0">
+    </div>`).join('');
+  const due = new Date();
+  due.setDate(due.getDate()+14);
+  document.getElementById('borDate').textContent = new Date().toDateString();
+  document.getElementById('borDue').textContent  = due.toDateString();
+  document.getElementById('borCnt').textContent  = n+' book(s)';
+  sum.style.display='flex';
+}
+
+async function borrowBook() {
+  if (!currentUser) { toast('Please login to borrow','error'); openModal(); return; }
+  if (!detailId) return;
+  try {
+    await api('/borrows',{method:'POST',body:JSON.stringify({book_id:detailId})});
+    toast('📚 Book borrowed! Return in 14 days.','success');
+    await loadBooks();
+    await loadMyBorrows();
+    // add local notification
+    addLocalNotif('📚 Book Borrowed', 'You borrowed a book. Return on time to avoid fines!', 'success');
+    nav('reminders');
+  } catch(e) { toast(e.message,'error'); }
+}
+
+async function submitBorrow() {
+  if (!currentUser) { toast('Please login','error'); openModal(); return; }
+  const n = Math.min(parseInt(document.getElementById('borCount').value)||0,3);
+  if (!n) { toast('Enter number of books','error'); return; }
+  const titles = [];
+  for (let i=0;i<n;i++) {
+    const v = document.getElementById('bk_'+i)?.value?.trim();
+    if (v) titles.push(v);
+  }
+  if (!titles.length) { toast('Enter at least one title','error'); return; }
+  if (online) {
+    try {
+      for (const t of titles) {
+        const m = allBooks.find(b=>b.title.toLowerCase().includes(t.toLowerCase())||b.isbn===t);
+        if (m) await api('/borrows',{method:'POST',body:JSON.stringify({book_id:m.id})});
+      }
+      toast(`${titles.length} book(s) borrowed!`,'success');
+    } catch(e) { toast(e.message,'error'); return; }
+  } else {
+    const due = new Date(); due.setDate(due.getDate()+14);
+    const saved = JSON.parse(localStorage.getItem('libra_bors')||'[]');
+    titles.forEach(t => saved.push({
+      id: Date.now()+Math.random(),title:t,author:'Unknown',emoji:'📖',
+      borrow_date:new Date().toISOString().split('T')[0],
+      due_date:due.toISOString().split('T')[0],status:'active',fine:0,book_id:null
+    }));
+    localStorage.setItem('libra_bors',JSON.stringify(saved));
+    myBorrows = saved;
+    addLocalNotif('📚 Books Borrowed',`You borrowed ${titles.length} book(s). Due: ${due.toDateString()}`,'success');
+    toast(`${titles.length} book(s) requested (offline mode)!`,'success');
+  }
+  document.getElementById('borCount').value='';
+  document.getElementById('borArea').innerHTML='';
+  document.getElementById('borSum').style.display='none';
+  await loadMyBorrows();
+  nav('reminders');
+}
+
+/* ══ REMINDERS ════════════════════════════════════════════════ */
+async function loadReminders() {
+  await loadMyBorrows();
+  const wrap = document.getElementById('remContent');
+  const active = myBorrows.filter(b=>b.status==='active');
+  if (!active.length) {
+    wrap.innerHTML=`<div class="empty-state"><div class="es-emoji">⏰</div><p>No active borrows. Borrow a book to see reminders!</p><button class="btn btn-primary" onclick="nav('library')">Browse Library</button></div>`;
+    return;
+  }
+  const today = new Date();
+  // Check overdue
+  const overdue = active.filter(b=>new Date(b.due_date)<today);
+  if (overdue.length) {
+    document.getElementById('ovText').textContent=`You have ${overdue.length} overdue book(s)! Return immediately to avoid more fines.`;
+    document.getElementById('ovBanner').style.display='flex';
+    // Add overdue notifications
+    overdue.forEach(b=>{
+      const days=Math.round((today-new Date(b.due_date))/86400000);
+      addLocalNotif('🚨 Book Overdue!',`"${b.title}" is overdue by ${days} day(s). Fine: ₹${days*5}. Return immediately!`,'error');
+    });
+  }
+  wrap.innerHTML = `<div class="rem-timeline">${active.map(b=>remItem(b,today)).join('')}</div>`;
+}
+
+function remItem(b, today) {
+  const due  = new Date(b.due_date);
+  const diff = Math.round((due-today)/86400000);
+  const od   = diff<0?Math.abs(diff):0;
+  const fine = od*5;
+  let dot,icon,bclass,btxt,msg,msgbg;
+  if (diff<0)      { dot='rd-r';icon='🚨';bclass='badge-no';   btxt=`${od}d overdue`;  msg=`This book is <strong>${od} day(s) overdue</strong>. Fine: <strong style="color:#b91c1c">₹${fine}</strong>. Return immediately!`; msgbg='#fff1f2'; }
+  else if(diff===0){ dot='rd-o';icon='⚠️';bclass='badge-warn'; btxt='Due Today';       msg='This book is <strong>due today!</strong> Return it to avoid fines.'; msgbg='#fffbeb'; }
+  else if(diff===1){ dot='rd-o';icon='⚠️';bclass='badge-warn'; btxt='Due Tomorrow';    msg='Due <strong>tomorrow</strong>. Plan to return it today or tomorrow.'; msgbg='#fffbeb'; }
+  else if(diff<=3) { dot='rd-y';icon='📅';bclass='badge-warn'; btxt=`${diff} days`;    msg=`Only <strong>${diff} days</strong> left. Return soon to be safe!`; msgbg='#fffde7'; }
+  else             { dot='rd-g';icon='✅';bclass='badge-ok';   btxt=`${diff} days left`;msg=`You have <strong>${diff} days</strong> remaining. You're on track! 🎉`; msgbg='#f0fdf4'; }
+  return `
+  <div class="rem-item">
+    <div class="rem-dot ${dot}">${icon}</div>
+    <div class="rem-card">
+      <div class="rc-top">
+        <div>
+          <div class="rc-title">${b.emoji||'📖'} ${b.title}</div>
+          <div class="rc-book">by ${b.author}</div>
+        </div>
+        <span class="badge ${bclass}">${btxt}</span>
+      </div>
+      <div class="rc-meta">
+        <div class="rc-tag">📅 Borrowed: ${b.borrow_date}</div>
+        <div class="rc-tag">📆 Due: <strong>${b.due_date}</strong></div>
+        ${fine>0?`<div class="rc-tag" style="background:#fee2e2;color:#991b1b">💸 Fine: ₹${fine}</div>`:''}
+      </div>
+      <div class="rc-msg" style="background:${msgbg}">${msg}</div>
+      <div class="rc-acts">
+        ${diff<=2?`<button class="btn btn-primary btn-sm" onclick="returnBook(${b.id})">↩ Return Now</button>`:''}
+        ${b.book_id?`<button class="btn btn-outline btn-sm" onclick="openDetail(${b.book_id})">View Book</button>`:''}
+      </div>
+    </div>
+  </div>`;
+}
+
+/* ══ MY BORROWS ═══════════════════════════════════════════════ */
+async function loadMyBorrows() {
+  if (!currentUser) { myBorrows = JSON.parse(localStorage.getItem('libra_bors')||'[]'); return; }
+  try { myBorrows = await api('/borrows/my'); }
+  catch { myBorrows = JSON.parse(localStorage.getItem('libra_bors')||'[]'); }
+}
+
+async function returnBook(id) {
+  if (!currentUser) { toast('Please login','error'); return; }
+  if (online) {
+    try {
+      const r = await api(`/borrows/${id}/return`,{method:'PUT'});
+      toast(r.fine>0?`Returned. Fine: ₹${r.fine}`:' Returned on time! ✅', r.fine>0?'warning':'success');
+    } catch(e) { toast(e.message,'error'); return; }
+  } else {
+    const saved = JSON.parse(localStorage.getItem('libra_bors')||'[]');
+    const idx   = saved.findIndex(b=>b.id==id);
+    if (idx!==-1) { saved[idx].status='returned'; saved[idx].return_date=new Date().toISOString().split('T')[0]; localStorage.setItem('libra_bors',JSON.stringify(saved)); }
+    toast('Returned successfully! ✅','success');
+  }
+  await loadMyBorrows();
+  await loadReminders();
+  await loadDashboard();
+}
+
+/* ══ DASHBOARD ════════════════════════════════════════════════ */
+async function loadDashboard() {
+  await loadMyBorrows();
+  await loadWishData();
+  const today   = new Date();
+  const active  = myBorrows.filter(b=>b.status==='active').length;
+  const ret     = myBorrows.filter(b=>b.status!=='active').length;
+  const ov      = myBorrows.filter(b=>b.status==='active'&&new Date(b.due_date)<today).length;
+  const fine    = myBorrows.reduce((a,b)=>a+(b.computed_fine||b.fine||0),0);
+  document.getElementById('dActive').textContent = active;
+  document.getElementById('dRet').textContent    = ret;
+  document.getElementById('dOv').textContent     = ov;
+  document.getElementById('dWish').textContent   = myWishlist.length;
+  document.getElementById('dFine').textContent   = fine>0?`₹${fine}`:'₹0';
+  if (currentUser&&online) {
+    try {
+      const d = await api('/dashboard');
+      document.getElementById('dActive').textContent = d.active;
+      document.getElementById('dRet').textContent    = d.returned;
+      document.getElementById('dOv').textContent     = d.overdue;
+      document.getElementById('dWish').textContent   = d.wishCount;
+      document.getElementById('dFine').textContent   = d.fine>0?`₹${d.fine}`:'₹0';
+      document.getElementById('notifDot').classList.toggle('show',d.unread>0);
+    } catch {}
+  }
+  loadHistory();
+}
+
+function loadHistory() {
+  const tb = document.getElementById('histTbl');
+  const today = new Date();
+  if (!myBorrows.length) { tb.innerHTML=`<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:28px">No history yet.</td></tr>`; return; }
+  tb.innerHTML = myBorrows.slice().reverse().map(b=>{
+    const ov = b.status==='active'&&new Date(b.due_date)<today;
+    const f  = b.computed_fine||b.fine||0;
+    return `<tr class="${ov?'ov-row':''}">
+      <td><strong>${b.title}</strong></td>
+      <td style="color:var(--muted)">${b.borrow_date}</td>
+      <td>${b.due_date}${ov?' 🔴':''}</td>
+      <td><span class="badge ${b.status==='active'?'badge-ok':'badge-no'}">${b.status==='active'?'Active':'Returned'}</span></td>
+      <td>${f>0?`<span style="color:var(--danger);font-weight:600">₹${f}</span>`:'<span style="color:var(--ok)">₹0</span>'}</td>
+      <td>${b.status==='active'?`<button class="btn btn-danger btn-xs" onclick="returnBook(${b.id})">Return</button>`:'—'}</td>
+    </tr>`;
+  }).join('');
+}
+
+/* ══ WISHLIST ═════════════════════════════════════════════════ */
+async function loadWishData() {
+  if (!currentUser) { myWishlist=[]; return; }
+  try { myWishlist = await api('/wishlist'); }
+  catch { myWishlist=[]; }
+}
+async function loadWishlist() {
+  await loadWishData();
+  const g=document.getElementById('wishGrid'), e=document.getElementById('emptyWish');
+  if (!myWishlist.length) { g.innerHTML=''; e.style.display='block'; return; }
+  e.style.display='none';
+  g.innerHTML = myWishlist.map(b=>bookCard(b)).join('');
+}
+async function toggleWish(id, btn) {
+  if (!currentUser) { toast('Login to use wishlist','error'); openModal(); return; }
+  const has = myWishlist.some(w=>w.id===id);
+  try {
+    if (has) { await api(`/wishlist/${id}`,{method:'DELETE'}); myWishlist=myWishlist.filter(w=>w.id!==id); if(btn)btn.textContent='🤍'; toast('Removed from wishlist'); }
+    else     { await api('/wishlist',{method:'POST',body:JSON.stringify({book_id:id})}); const bk=allBooks.find(b=>b.id===id); if(bk)myWishlist.push(bk); if(btn)btn.textContent='❤️'; toast('Added to wishlist! ❤️','success'); }
+  } catch(e) { toast(e.message,'error'); }
+}
+async function wishFromDetail() {
+  await toggleWish(detailId,null);
+  const wished=myWishlist.some(w=>w.id===detailId);
+  document.getElementById('dWishBtn').textContent=wished?'💔 Remove Wishlist':'❤️ Add to Wishlist';
+}
+
+/* ══ NOTIFICATIONS ════════════════════════════════════════════ */
+function addLocalNotif(title,msg,type='info') {
+  const saved = JSON.parse(localStorage.getItem('libra_notifs')||'[]');
+  saved.unshift({id:Date.now(),title,message:msg,type,is_read:0,created_at:new Date().toISOString()});
+  localStorage.setItem('libra_notifs',JSON.stringify(saved.slice(0,50)));
+  myNotifs = saved;
+  document.getElementById('notifDot').classList.add('show');
+}
+
+async function loadNotifs() {
+  if (!currentUser) { document.getElementById('notifList').innerHTML=`<div class="empty-state"><div class="es-emoji">🔔</div><p>Login to view notifications.</p></div>`; return; }
+  if (online) {
+    try { myNotifs = await api('/notifications'); }
+    catch { myNotifs = JSON.parse(localStorage.getItem('libra_notifs')||'[]'); }
+  } else {
+    myNotifs = JSON.parse(localStorage.getItem('libra_notifs')||'[]');
+  }
+  renderNotifs();
+}
+
+function renderNotifs() {
+  const list = document.getElementById('notifList');
+  if (!myNotifs.length) { list.innerHTML=`<div class="empty-state"><div class="es-emoji">✅</div><p>No notifications yet.</p></div>`; return; }
+  list.innerHTML = myNotifs.map(n=>`
+    <div class="not-card ${n.is_read?'':'unread'} t${n.type.charAt(0)}">
+      <div class="not-icon">${n.type==='success'?'✅':n.type==='error'?'🚨':n.type==='warning'?'⚠️':'📢'}</div>
+      <div>
+        <h4>${n.title}</h4>
+        <p>${n.message}</p>
+        <div class="not-time">${timeAgo(n.created_at)}</div>
+      </div>
+    </div>`).join('');
+}
+
+async function markAllRead() {
+  if (online&&currentUser) {
+    try { await api('/notifications/read-all',{method:'PUT'}); }
+    catch {}
+  }
+  const saved=JSON.parse(localStorage.getItem('libra_notifs')||'[]');
+  saved.forEach(n=>n.is_read=1);
+  localStorage.setItem('libra_notifs',JSON.stringify(saved));
+  myNotifs.forEach(n=>n.is_read=1);
+  renderNotifs();
+  document.getElementById('notifDot').classList.remove('show');
+  toast('All marked as read');
+}
+
+function timeAgo(dt) {
+  const d=new Date(dt),diff=(Date.now()-d)/1000;
+  if(diff<60)return 'just now';
+  if(diff<3600)return Math.floor(diff/60)+'m ago';
+  if(diff<86400)return Math.floor(diff/3600)+'h ago';
+  return Math.floor(diff/86400)+'d ago';
+}
+
+/* ══ AUTH ═════════════════════════════════════════════════════ */
+function openModal()  { document.getElementById('overlay').classList.add('open'); }
+function closeModal() { document.getElementById('overlay').classList.remove('open'); }
+document.getElementById('overlay').addEventListener('click',e=>{if(e.target.id==='overlay')closeModal();});
+
+function setMode(m) {
+  isSignup=m==='signup';
+  document.getElementById('tabL').classList.toggle('active',!isSignup);
+  document.getElementById('tabS').classList.toggle('active',isSignup);
+  document.getElementById('otpGrp').style.display =isSignup?'block':'none';
+  document.getElementById('nameGrp').style.display=isSignup?'block':'none';
+  document.getElementById('mTitle').textContent=isSignup?'Create Account':'Welcome Back';
+  document.getElementById('mSub').textContent  =isSignup?'Sign up for free':'Sign in to continue';
+}
+
+async function sendOTP() {
+  const email=document.getElementById('iMail').value.trim();
+  if (!email) { toast('Enter your email first','error'); return; }
+  if (online) {
+    try {
+      const r=await api('/auth/send-otp',{method:'POST',body:JSON.stringify({email})});
+      alert(`OTP sent!\n\nFor testing (dev mode): ${r._dev_otp}`);
+    } catch(e) { toast(e.message,'error'); }
+  } else {
+    const otp=String(Math.floor(1000+Math.random()*9000));
+    localStorage.setItem('libra_otp_'+email,otp);
+    alert('OTP (offline demo): '+otp);
+  }
+}
+
+async function validate() {
+  const roll=document.getElementById('iRoll').value.trim();
+  const mail=document.getElementById('iMail').value.trim();
+  const pass=document.getElementById('iPass').value;
+  const name=document.getElementById('iName')?.value.trim()||roll;
+  if (!roll||!mail||!pass) { toast('Fill all fields','error'); return; }
+  if (online) {
+    try {
+      let res;
+      if (isSignup) {
+        const otp=document.getElementById('iOtp').value;
+        await api('/auth/verify-otp',{method:'POST',body:JSON.stringify({email:mail,otp})});
+        res=await api('/auth/signup',{method:'POST',body:JSON.stringify({roll,name,email:mail,password:pass})});
+      } else {
+        res=await api('/auth/login',{method:'POST',body:JSON.stringify({roll,password:pass})});
+      }
+      token=res.token; currentUser=res.user;
+      localStorage.setItem('libra_token',token);
+      localStorage.setItem('libra_user',JSON.stringify(currentUser));
+      toast(isSignup?'Account created! Welcome 🎉':`Welcome back, ${currentUser.name||roll}! 👋`,'success');
+      updateAuthUI(); closeModal();
+      await loadMyBorrows(); await loadWishData(); await loadDashboard();
+    } catch(e) { toast(e.message,'error'); }
+  } else {
+    if (isSignup) {
+      const otp=document.getElementById('iOtp').value;
+      if (otp!==localStorage.getItem('libra_otp_'+mail)) { toast('Incorrect OTP','error'); return; }
+      localStorage.setItem('libra_u_'+roll,JSON.stringify({roll,name,mail,pass}));
+      currentUser={roll,name,email:mail};
+      toast('Account created! 🎉','success');
+    } else {
+      const u=JSON.parse(localStorage.getItem('libra_u_'+roll)||'null');
+      if (!u||u.pass!==pass) { toast('Invalid credentials','error'); return; }
+      currentUser={roll,name:u.name,email:u.mail};
+      toast(`Welcome back, ${currentUser.name}! 👋`,'success');
+    }
+    localStorage.setItem('libra_user',JSON.stringify(currentUser));
+    updateAuthUI(); closeModal();
+  }
+}
+
+function updateAuthUI() {
+  const area=document.getElementById('authArea');
+  if (currentUser) {
+    const init=(currentUser.name||currentUser.roll).slice(0,2).toUpperCase();
+    area.innerHTML=`<div class="user-chip" onclick="logoutUser()"><div class="u-avatar">${init}</div><span class="u-name">${currentUser.roll}</span><span style="color:rgba(255,255,255,.4);font-size:11px;margin-left:2px">Logout</span></div>`;
+  } else {
+    area.innerHTML=`<button class="nb login-btn" onclick="openModal()">Login / Sign Up</button>`;
+  }
+}
+
+function logoutUser() {
+  currentUser=null;token='';
+  localStorage.removeItem('libra_user');localStorage.removeItem('libra_token');
+  myBorrows=[];myWishlist=[];myNotifs=[];
+  toast('Logged out');
+  updateAuthUI();nav('home');
+}
+
+/* ══ TOAST ════════════════════════════════════════════════════ */
+function toast(msg,type='') {
+  const el=document.createElement('div');
+  el.className='toast '+type;el.textContent=msg;
+  document.getElementById('toastArea').appendChild(el);
+  setTimeout(()=>el.remove(),3400);
+}
+
+/* ══ INIT ═════════════════════════════════════════════════════ */
+async function init() {
+  if (currentUser) updateAuthUI();
+  try { await fetch(API+'/books',{signal:AbortSignal.timeout(2000)}); online=true; }
+  catch { online=false; }
+  await loadBooks();
+  if (currentUser) {
+    await loadMyBorrows();
+    await loadWishData();
+    // Check overdue on startup
+    const today=new Date();
+    const ov=myBorrows.filter(b=>b.status==='active'&&new Date(b.due_date)<today);
+    if (ov.length) {
+      document.getElementById('ovText').textContent=`You have ${ov.length} overdue book(s). Return them to avoid daily fines!`;
+      document.getElementById('ovBanner').style.display='flex';
+    }
+    // Local reminder check: notify for books due in ≤3 days
+    const due3=myBorrows.filter(b=>{if(b.status!=='active')return false;const d=Math.round((new Date(b.due_date)-today)/86400000);return d>=0&&d<=3;});
+    due3.forEach(b=>{
+      const d=Math.round((new Date(b.due_date)-today)/86400000);
+      addLocalNotif(d===0?'⚠️ Due Today!':d===1?'⚠️ Due Tomorrow!':'📅 Due in '+d+' Days',`"${b.title}" is due on ${b.due_date}. Return on time!`,'warning');
+    });
+  }
+}
+init();
+</script>
+</body>
+</html>
